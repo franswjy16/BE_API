@@ -3,8 +3,16 @@ const bodyParser = require("body-parser");
 const multer = require("multer");
 const cors = require("cors");
 const path = require("path");
+const mysql = require("mysql")
 
 const app = express();
+
+const db = mysql.createConnection({
+  host: "localhost",
+  database: "comment",
+  user: "root",
+  password: "",
+})
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
@@ -38,6 +46,25 @@ app.post(`/api/upload`, upload.single("photo"), (req, res) => {
   res.json({ image: finalImageURL });
 });
 
+db.connect((err) => {
+  /* if (err) throw err */
+
+  app.get("/comment", (req, res) => {
+      const sql = "SELECT * FROM kata"
+      db.query(sql, (err, result) => {
+          const comments = JSON.parse(JSON.stringify(result))
+          res.json({comments: comments})
+      }) 
+ })
+ app.post("/comment", (req, res) => {
+  const insertsql = `INSERT INTO kata (comment, url) VALUES ('${req.comment}', '${req.url}');`
+  db.query(insertsql, (err, result) => {
+      if (err) throw err
+      res.redirect("/");
+  })
+ }) 
+})
+
 const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, (e) => {
@@ -45,3 +72,5 @@ app.listen(PORT, (e) => {
 
   console.log(`Server is running on PORT : ${PORT}`);
 });
+
+
